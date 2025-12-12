@@ -36,3 +36,25 @@ export const chatModel = createMockModel();
 export const reasoningModel = createMockModel();
 export const titleModel = createMockModel();
 export const artifactModel = createMockModel();
+
+// OpenAI Mock Models
+export const openaiGpt4Model = createMockModel();
+export const openaiGpt4TurboModel = createMockModel();
+export const openaiGpt4oModel = createMockModel();
+export const openaiGpt4oMiniModel = createMockModel();
+
+// Anthropic Mock Models
+export const anthropicClaude35SonnetModel = createMockModel();
+export const anthropicClaude3OpusModel = createMockModel();
+export const anthropicClaude3SonnetModel = createMockModel();
+export const anthropicClaude3HaikuModel = createMockModel();
+
+// Groq Mock Models
+export const groqLlama31_70bModel = createMockModel();
+export const groqLlama31_8bModel = createMockModel();
+export const groqLlama3_70bModel = createMockModel();
+
+// Google Mock Models
+export const googleGeminiProModel = createMockModel();
+export const googleGemini15ProModel = createMockModel();
+export const googleGemini15FlashModel = createMockModel();

@@ -467,6 +467,19 @@ function PureModelSelectorCompact({
     (model) => model.id === optimisticModelId
   );
 
+  // Group models by provider
+  const modelsByProvider = useMemo(() => {
+    const grouped: Record<string, typeof chatModels> = {};
+    for (const model of chatModels) {
+      const provider = model.provider || "Other";
+      if (!grouped[provider]) {
+        grouped[provider] = [];
+      }
+      grouped[provider].push(model);
+    }
+    return grouped;
+  }, []);
+
   return (
     <PromptInputModelSelect
       onValueChange={(modelName) => {
@@ -490,15 +503,24 @@ function PureModelSelectorCompact({
           <ChevronDownIcon size={16} />
         </Button>
       </Trigger>
-      <PromptInputModelSelectContent className="min-w-[260px] p-0">
+      <PromptInputModelSelectContent className="min-w-[260px] max-h-[80vh] overflow-y-auto p-0">
         <div className="flex flex-col gap-px">
-          {chatModels.map((model) => (
-            <SelectItem key={model.id} value={model.name}>
-              <div className="truncate font-medium text-xs">{model.name}</div>
-              <div className="mt-px truncate text-[10px] text-muted-foreground leading-tight">
-                {model.description}
+          {Object.entries(modelsByProvider).map(([provider, models]) => (
+            <div key={provider}>
+              <div className="px-2 py-1.5 text-muted-foreground text-[10px] font-semibold uppercase">
+                {provider}
               </div>
-            </SelectItem>
+              {models.map((model) => (
+                <SelectItem key={model.id} value={model.name}>
+                  <div className="truncate font-medium text-xs">
+                    {model.name}
+                  </div>
+                  <div className="mt-px truncate text-[10px] text-muted-foreground leading-tight">
+                    {model.description}
+                  </div>
+                </SelectItem>
+              ))}
+            </div>
           ))}
         </div>
       </PromptInputModelSelectContent>

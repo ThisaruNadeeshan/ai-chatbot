@@ -42,6 +42,19 @@ export function ModelSelector({
     [optimisticModelId, availableChatModels]
   );
 
+  // Group models by provider
+  const modelsByProvider = useMemo(() => {
+    const grouped: Record<string, typeof availableChatModels> = {};
+    for (const model of availableChatModels) {
+      const provider = model.provider || "Other";
+      if (!grouped[provider]) {
+        grouped[provider] = [];
+      }
+      grouped[provider].push(model);
+    }
+    return grouped;
+  }, [availableChatModels]);
+
   return (
     <DropdownMenu onOpenChange={setOpen} open={open}>
       <DropdownMenuTrigger
@@ -62,44 +75,53 @@ export function ModelSelector({
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="start"
-        className="min-w-[280px] max-w-[90vw] sm:min-w-[300px]"
+        className="min-w-[280px] max-w-[90vw] sm:min-w-[300px] max-h-[80vh] overflow-y-auto"
       >
-        {availableChatModels.map((chatModel) => {
-          const { id } = chatModel;
+        {Object.entries(modelsByProvider).map(([provider, models]) => (
+          <div key={provider}>
+            <div className="px-2 py-1.5 text-muted-foreground text-xs font-semibold uppercase">
+              {provider}
+            </div>
+            {models.map((chatModel) => {
+              const { id } = chatModel;
 
-          return (
-            <DropdownMenuItem
-              asChild
-              data-active={id === optimisticModelId}
-              data-testid={`model-selector-item-${id}`}
-              key={id}
-              onSelect={() => {
-                setOpen(false);
+              return (
+                <DropdownMenuItem
+                  asChild
+                  data-active={id === optimisticModelId}
+                  data-testid={`model-selector-item-${id}`}
+                  key={id}
+                  onSelect={() => {
+                    setOpen(false);
 
-                startTransition(() => {
-                  setOptimisticModelId(id);
-                  saveChatModelAsCookie(id);
-                });
-              }}
-            >
-              <button
-                className="group/item flex w-full flex-row items-center justify-between gap-2 sm:gap-4"
-                type="button"
-              >
-                <div className="flex flex-col items-start gap-1">
-                  <div className="text-sm sm:text-base">{chatModel.name}</div>
-                  <div className="line-clamp-2 text-muted-foreground text-xs">
-                    {chatModel.description}
-                  </div>
-                </div>
+                    startTransition(() => {
+                      setOptimisticModelId(id);
+                      saveChatModelAsCookie(id);
+                    });
+                  }}
+                >
+                  <button
+                    className="group/item flex w-full flex-row items-center justify-between gap-2 sm:gap-4"
+                    type="button"
+                  >
+                    <div className="flex flex-col items-start gap-1">
+                      <div className="text-sm sm:text-base">
+                        {chatModel.name}
+                      </div>
+                      <div className="line-clamp-2 text-muted-foreground text-xs">
+                        {chatModel.description}
+                      </div>
+                    </div>
 
-                <div className="shrink-0 text-foreground opacity-0 group-data-[active=true]/item:opacity-100 dark:text-foreground">
-                  <CheckCircleFillIcon />
-                </div>
-              </button>
-            </DropdownMenuItem>
-          );
-        })}
+                    <div className="shrink-0 text-foreground opacity-0 group-data-[active=true]/item:opacity-100 dark:text-foreground">
+                      <CheckCircleFillIcon />
+                    </div>
+                  </button>
+                </DropdownMenuItem>
+              );
+            })}
+          </div>
+        ))}
       </DropdownMenuContent>
     </DropdownMenu>
   );
