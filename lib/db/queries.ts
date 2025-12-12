@@ -63,6 +63,43 @@ export async function createUser(email: string, password: string) {
   }
 }
 
+export async function createOrGetOAuthUser(email: string) {
+  try {
+    const existingUsers = await getUser(email);
+
+    if (existingUsers.length > 0) {
+      const [existingUser] = existingUsers;
+
+      // If user exists with password, this is a conflict
+      if (existingUser.password) {
+        throw new ChatSDKError(
+          "conflict:account",
+          "An account with this email already exists. Please sign in with your password."
+        );
+      }
+
+      // User exists without password (OAuth user), return it
+      return existingUser;
+    }
+
+    // User doesn't exist, create new OAuth user (no password)
+    const [newUser] = await db
+      .insert(user)
+      .values({ email, password: null })
+      .returning();
+
+    return newUser;
+  } catch (error) {
+    if (error instanceof ChatSDKError) {
+      throw error;
+    }
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to create or get OAuth user"
+    );
+  }
+}
+
 export async function createGuestUser() {
   const email = `guest-${Date.now()}`;
   const password = generateHashedPassword(generateUUID());
