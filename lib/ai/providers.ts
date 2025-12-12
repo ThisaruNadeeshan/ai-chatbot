@@ -7,6 +7,10 @@ import {
 import { isTestEnvironment } from "../constants";
 
 // Create gateway instance with API key for all models
+// According to Vercel AI Gateway docs: https://vercel.com/docs/ai-gateway/openai-compat
+// The gateway automatically detects the correct base URL:
+// - For Vercel deployments: Uses OIDC tokens automatically
+// - For non-Vercel deployments: Uses https://ai-gateway.vercel.sh/v1 with API key
 const gateway = createGateway({
   apiKey: process.env.AI_GATEWAY_API_KEY,
 });
@@ -67,34 +71,34 @@ export const myProvider = isTestEnvironment
         "title-model": gateway.languageModel("xai/grok-2-1212"),
         "artifact-model": gateway.languageModel("xai/grok-2-1212"),
         // OpenAI Models - using gateway
-        "openai-gpt-4": gateway.languageModel("openai/gpt-4"),
+        // Note: GPT-4 base model may not be available, using GPT-4 Turbo instead
+        "openai-gpt-4": gateway.languageModel("openai/gpt-4-turbo"),
         "openai-gpt-4-turbo": gateway.languageModel("openai/gpt-4-turbo"),
         "openai-gpt-4o": gateway.languageModel("openai/gpt-4o"),
         "openai-gpt-4o-mini": gateway.languageModel("openai/gpt-4o-mini"),
         // Anthropic Models - using gateway
         "anthropic-claude-3-5-sonnet": gateway.languageModel(
-          "anthropic/claude-3-5-sonnet-20241022"
+          "anthropic/claude-3.5-sonnet"
         ),
         "anthropic-claude-3-opus": gateway.languageModel(
-          "anthropic/claude-3-opus-20240229"
+          "anthropic/claude-3-opus"
         ),
         "anthropic-claude-3-sonnet": gateway.languageModel(
-          "anthropic/claude-3-sonnet-20240229"
+          "anthropic/claude-3.5-sonnet"
         ),
         "anthropic-claude-3-haiku": gateway.languageModel(
-          "anthropic/claude-3-haiku-20240307"
+          "anthropic/claude-3-haiku"
         ),
-        // Groq Models - using gateway
-        "groq-llama-3-1-70b": gateway.languageModel(
-          "groq/llama-3.1-70b-versatile"
-        ),
-        "groq-llama-3-1-8b": gateway.languageModel("groq/llama-3.1-8b-instant"),
-        "groq-llama-3-70b": gateway.languageModel("groq/llama-3-70b-8192"),
+        // Groq Models - using gateway (Note: Groq models may need different identifiers)
+        // Using Meta Llama models via gateway instead
+        "groq-llama-3-1-70b": gateway.languageModel("meta/llama-3.1-70b"),
+        "groq-llama-3-1-8b": gateway.languageModel("meta/llama-3.1-8b"),
+        "groq-llama-3-70b": gateway.languageModel("meta/llama-3.1-70b"),
         // Google Models - using gateway
-        "google-gemini-pro": gateway.languageModel("google/gemini-pro"),
-        "google-gemini-1-5-pro": gateway.languageModel("google/gemini-1.5-pro"),
+        "google-gemini-pro": gateway.languageModel("google/gemini-2.5-pro"),
+        "google-gemini-1-5-pro": gateway.languageModel("google/gemini-2.5-pro"),
         "google-gemini-1-5-flash": gateway.languageModel(
-          "google/gemini-1.5-flash"
+          "google/gemini-2.5-flash"
         ),
       },
     });

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { chatModels } from "@/lib/ai/models";
 
 const textPartSchema = z.object({
   type: z.enum(["text"]),
@@ -14,6 +15,10 @@ const filePartSchema = z.object({
 
 const partSchema = z.union([textPartSchema, filePartSchema]);
 
+// Create enum from all available model IDs
+const modelIds = chatModels.map((model) => model.id) as [string, ...string[]];
+const chatModelEnum = z.enum(modelIds);
+
 export const postRequestBodySchema = z.object({
   id: z.string().uuid(),
   message: z.object({
@@ -21,8 +26,9 @@ export const postRequestBodySchema = z.object({
     role: z.enum(["user"]),
     parts: z.array(partSchema),
   }),
-  selectedChatModel: z.enum(["chat-model", "chat-model-reasoning"]),
+  selectedChatModel: chatModelEnum,
   selectedVisibilityType: z.enum(["public", "private"]),
+  enableWebSearch: z.boolean().optional().default(false),
 });
 
 export type PostRequestBody = z.infer<typeof postRequestBodySchema>;

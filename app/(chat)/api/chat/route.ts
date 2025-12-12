@@ -26,6 +26,7 @@ import { createDocument } from "@/lib/ai/tools/create-document";
 import { getWeather } from "@/lib/ai/tools/get-weather";
 import { requestSuggestions } from "@/lib/ai/tools/request-suggestions";
 import { updateDocument } from "@/lib/ai/tools/update-document";
+import { webSearch } from "@/lib/ai/tools/web-search";
 import { isProductionEnvironment } from "@/lib/constants";
 import {
   createStreamId,
@@ -87,6 +88,7 @@ export function getStreamContext() {
 
 export async function POST(request: Request) {
   let requestBody: PostRequestBody;
+  let selectedChatModel: ChatModel["id"] | undefined;
 
   try {
     const json = await request.json();
@@ -99,14 +101,18 @@ export async function POST(request: Request) {
     const {
       id,
       message,
-      selectedChatModel,
+      selectedChatModel: modelId,
       selectedVisibilityType,
+      enableWebSearch = true,
     }: {
       id: string;
       message: ChatMessage;
       selectedChatModel: ChatModel["id"];
       selectedVisibilityType: VisibilityType;
+      enableWebSearch?: boolean;
     } = requestBody;
+    
+    selectedChatModel = modelId;
 
     const session = await auth();
 
@@ -179,8 +185,16 @@ export async function POST(request: Request) {
 
     const stream = createUIMessageStream({
       execute: ({ writer: dataStream }) => {
+        // Get the model instance
+        const model = myProvider.languageModel(selectedChatModel);
+        
+        if (!model) {
+          console.error(`Model not found: ${selectedChatModel}`);
+          throw new Error(`Model "${selectedChatModel}" is not available`);
+        }
+
         const result = streamText({
-          model: myProvider.languageModel(selectedChatModel),
+          model,
           system: systemPrompt({ selectedChatModel, requestHints }),
           messages: convertToModelMessages(uiMessages),
           stopWhen: stepCountIs(5),
@@ -189,6 +203,7 @@ export async function POST(request: Request) {
               ? []
               : [
                   "getWeather",
+                  ...(enableWebSearch ? ["webSearch"] : []),
                   "createDocument",
                   "updateDocument",
                   "requestSuggestions",
@@ -196,6 +211,7 @@ export async function POST(request: Request) {
           experimental_transform: smoothStream({ chunking: "word" }),
           tools: {
             getWeather,
+            ...(enableWebSearch && { webSearch }),
             createDocument: createDocument({ session, dataStream }),
             updateDocument: updateDocument({ session, dataStream }),
             requestSuggestions: requestSuggestions({
@@ -306,7 +322,32 @@ export async function POST(request: Request) {
       return new ChatSDKError("bad_request:activate_gateway").toResponse();
     }
 
-    console.error("Unhandled error in chat API:", error, { vercelId });
+    // Log detailed error information for debugging
+    const errorDetails = {
+      vercelId,
+      selectedChatModel,
+      errorMessage: error instanceof Error ? error.message : String(error),
+      errorStack: error instanceof Error ? error.stack : undefined,
+      errorName: error instanceof Error ? error.name : undefined,
+    };
+    
+    console.error("Unhandled error in chat API:", error, errorDetails);
+    
+    // Check for specific gateway errors
+    if (error instanceof Error && selectedChatModel) {
+      // Check for model not found errors
+      if (
+        error.message.includes("model") &&
+        (error.message.includes("not found") ||
+          error.message.includes("invalid") ||
+          error.message.includes("400"))
+      ) {
+        console.error(
+          `Model error for ${selectedChatModel}:`,
+          error.message
+        );
+      }
+    }
     return new ChatSDKError("offline:chat").toResponse();
   }
 }
