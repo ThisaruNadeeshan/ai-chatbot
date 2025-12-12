@@ -283,6 +283,40 @@ export function Weather({
 }: {
   weatherAtLocation?: WeatherAtLocation;
 }) {
+  // Validate weather data structure
+  if (
+    !weatherAtLocation ||
+    !weatherAtLocation.hourly ||
+    !weatherAtLocation.hourly.temperature_2m ||
+    !Array.isArray(weatherAtLocation.hourly.temperature_2m) ||
+    weatherAtLocation.hourly.temperature_2m.length === 0
+  ) {
+    return (
+      <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-500 dark:bg-red-950/50">
+        <p className="font-medium">Weather Data Error</p>
+        <p className="text-sm">
+          Unable to display weather information. The data format is invalid.
+        </p>
+      </div>
+    );
+  }
+
+  if (
+    !weatherAtLocation.current ||
+    !weatherAtLocation.daily ||
+    !weatherAtLocation.daily.sunrise ||
+    !weatherAtLocation.daily.sunset
+  ) {
+    return (
+      <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-500 dark:bg-red-950/50">
+        <p className="font-medium">Weather Data Error</p>
+        <p className="text-sm">
+          Unable to display weather information. Missing required data fields.
+        </p>
+      </div>
+    );
+  }
+
   const currentHigh = Math.max(
     ...weatherAtLocation.hourly.temperature_2m.slice(0, 24)
   );

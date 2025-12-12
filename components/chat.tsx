@@ -76,10 +76,32 @@ export function Chat({
   const [showCreditCardAlert, setShowCreditCardAlert] = useState(false);
   const [currentModelId, setCurrentModelId] = useState(initialChatModel);
   const currentModelIdRef = useRef(currentModelId);
+  const [enableWebSearch, setEnableWebSearch] = useState(false);
+  const enableWebSearchRef = useRef(enableWebSearch);
 
   useEffect(() => {
     currentModelIdRef.current = currentModelId;
   }, [currentModelId]);
+
+  useEffect(() => {
+    enableWebSearchRef.current = enableWebSearch;
+  }, [enableWebSearch]);
+
+  // Load web search preference from localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem("enableWebSearch");
+    if (stored !== null) {
+      setEnableWebSearch(stored === "true");
+    } else {
+      // Default to false if not set
+      setEnableWebSearch(false);
+    }
+  }, []);
+
+  // Save web search preference to localStorage
+  useEffect(() => {
+    localStorage.setItem("enableWebSearch", String(enableWebSearch));
+  }, [enableWebSearch]);
 
   const {
     messages,
@@ -104,6 +126,7 @@ export function Chat({
             message: request.messages.at(-1),
             selectedChatModel: currentModelIdRef.current,
             selectedVisibilityType: visibilityType,
+            enableWebSearch: enableWebSearchRef.current,
             ...request.body,
           },
         };
@@ -191,6 +214,8 @@ export function Chat({
         <div className="sticky bottom-0 z-1 mx-auto flex w-full max-w-4xl gap-2 border-t-0 bg-background px-2 pb-3 md:px-4 md:pb-4">
           {!isReadonly && (
             <MultimodalInput
+              enableWebSearch={enableWebSearch}
+              onWebSearchToggle={setEnableWebSearch}
               attachments={attachments}
               chatId={id}
               input={input}

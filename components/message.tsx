@@ -23,6 +23,7 @@ import { MessageEditor } from "./message-editor";
 import { MessageReasoning } from "./message-reasoning";
 import { PreviewAttachment } from "./preview-attachment";
 import { Weather } from "./weather";
+import { WebSearch } from "./web-search";
 
 const PurePreviewMessage = ({
   chatId,
@@ -173,8 +174,16 @@ const PurePreviewMessage = ({
                     )}
                     {state === "output-available" && (
                       <ToolOutput
-                        errorText={undefined}
-                        output={<Weather weatherAtLocation={part.output} />}
+                        errorText={
+                          "error" in part.output
+                            ? String(part.output.error)
+                            : undefined
+                        }
+                        output={
+                          "error" in part.output ? undefined : (
+                            <Weather weatherAtLocation={part.output} />
+                          )
+                        }
                       />
                     )}
                   </ToolContent>
@@ -254,6 +263,35 @@ const PurePreviewMessage = ({
                               result={part.output}
                               type="request-suggestions"
                             />
+                          )
+                        }
+                      />
+                    )}
+                  </ToolContent>
+                </Tool>
+              );
+            }
+
+            if (type === "tool-webSearch") {
+              const { toolCallId, state } = part;
+
+              return (
+                <Tool defaultOpen={true} key={toolCallId}>
+                  <ToolHeader state={state} type="tool-webSearch" />
+                  <ToolContent>
+                    {state === "input-available" && (
+                      <ToolInput input={part.input} />
+                    )}
+                    {state === "output-available" && (
+                      <ToolOutput
+                        errorText={
+                          "error" in part.output
+                            ? String(part.output.error)
+                            : undefined
+                        }
+                        output={
+                          "error" in part.output ? undefined : (
+                            <WebSearch searchResults={part.output} />
                           )
                         }
                       />

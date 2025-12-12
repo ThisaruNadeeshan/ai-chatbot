@@ -63,16 +63,44 @@ export const getWeather = tool({
       };
     }
 
-    const response = await fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m&hourly=temperature_2m&daily=sunrise,sunset&timezone=auto`
-    );
+    try {
+      const response = await fetch(
+        `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m&hourly=temperature_2m&daily=sunrise,sunset&timezone=auto`
+      );
 
-    const weatherData = await response.json();
+      if (!response.ok) {
+        return {
+          error: `Weather API error: ${response.status} ${response.statusText}`,
+        };
+      }
 
-    if ("city" in input) {
-      weatherData.cityName = input.city;
+      const weatherData = await response.json();
+
+      // Validate the response structure
+      if (
+        !weatherData.current ||
+        !weatherData.hourly ||
+        !weatherData.daily ||
+        !weatherData.hourly.temperature_2m ||
+        !Array.isArray(weatherData.hourly.temperature_2m)
+      ) {
+        return {
+          error: "Invalid weather data format received from API",
+        };
+      }
+
+      if ("city" in input) {
+        weatherData.cityName = input.city;
+      }
+
+      return weatherData;
+    } catch (error) {
+      return {
+        error:
+          error instanceof Error
+            ? `Weather fetch failed: ${error.message}`
+            : "Weather fetch failed due to an unknown error",
+      };
     }
-
-    return weatherData;
   },
 });

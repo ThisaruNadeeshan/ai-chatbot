@@ -24,19 +24,21 @@ export async function middleware(request: NextRequest) {
   });
 
   if (!token) {
-    // Redirect to login if no token (not authenticated)
-    if (pathname !== "/login" && pathname !== "/register") {
-      const redirectUrl = encodeURIComponent(request.url);
-      return NextResponse.redirect(
-        new URL(`/login?redirectUrl=${redirectUrl}`, request.url)
-      );
+    // Redirect to login page if not authenticated
+    if (pathname === "/" || pathname.startsWith("/chat")) {
+      return NextResponse.redirect(new URL("/login", request.url));
     }
-    return NextResponse.next();
+    // Allow access to login/register pages
+    if (pathname === "/login" || pathname === "/register") {
+      return NextResponse.next();
+    }
+    // For other routes, redirect to login
+    return NextResponse.redirect(new URL("/login", request.url));
   }
 
   const isGuest = guestRegex.test(token?.email ?? "");
 
-  // Block guest users from accessing chat pages - redirect to login
+  // Block guest users from accessing chat pages
   if (isGuest && (pathname === "/" || pathname.startsWith("/chat"))) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
@@ -51,14 +53,18 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
+    "/",
+    "/chat/:id",
+    "/api/:path*",
+    "/login",
+    "/register",
+
     /*
      * Match all request paths except for the ones starting with:
-     * - api/auth (auth endpoints)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico, sitemap.xml, robots.txt (metadata files)
      */
-    "/((?!api/auth|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)",
+    "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)",
   ],
 };
-

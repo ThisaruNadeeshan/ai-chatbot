@@ -41,6 +41,7 @@ import {
   PaperclipIcon,
   StopIcon,
 } from "./icons";
+import { ToolsSelector } from "./tools-selector";
 import { PreviewAttachment } from "./preview-attachment";
 import { SuggestedActions } from "./suggested-actions";
 import { Button } from "./ui/button";
@@ -62,6 +63,8 @@ function PureMultimodalInput({
   selectedModelId,
   onModelChange,
   usage,
+  enableWebSearch = false,
+  onWebSearchToggle,
 }: {
   chatId: string;
   input: string;
@@ -78,6 +81,8 @@ function PureMultimodalInput({
   selectedModelId: string;
   onModelChange?: (modelId: string) => void;
   usage?: AppUsage;
+  enableWebSearch?: boolean;
+  onWebSearchToggle?: (enabled: boolean) => void;
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
@@ -378,6 +383,10 @@ function PureMultimodalInput({
               onModelChange={onModelChange}
               selectedModelId={selectedModelId}
             />
+            <ToolsSelector
+              enableWebSearch={enableWebSearch}
+              onWebSearchToggle={onWebSearchToggle}
+            />
           </PromptInputTools>
 
           {status === "submitted" ? (
@@ -414,6 +423,9 @@ export const MultimodalInput = memo(
       return false;
     }
     if (prevProps.selectedModelId !== nextProps.selectedModelId) {
+      return false;
+    }
+    if (prevProps.enableWebSearch !== nextProps.enableWebSearch) {
       return false;
     }
 
